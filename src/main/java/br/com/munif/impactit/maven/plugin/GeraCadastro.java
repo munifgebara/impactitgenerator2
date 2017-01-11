@@ -55,6 +55,7 @@ public class GeraCadastro extends AbstractMojo {
             geraRepository();
             geraService();
             geraController();
+            geraApi();
 
             geraViewLista();
             geraViewEdita();
@@ -448,6 +449,44 @@ public class GeraCadastro extends AbstractMojo {
             getLog().error(ex);
         }
 
+    }
+
+    private void geraApi() {
+        File f = new File(pasta + "/" + nomePacoteBase.replaceAll("\\.", "/"));
+        f.mkdirs();
+        File arquivoClasse = new File(f.getAbsolutePath() + "/" + nomeEntidade + "API.java");
+        getLog().info(arquivoClasse.getAbsolutePath());
+        try {
+            OutputStreamWriter fw = new OutputStreamWriter(new FileOutputStream(arquivoClasse), "UTF-8");
+            String primeiroAtributo = Util.primeiraMaiuscula(Util.primeiroAtributo(classeEntidade).getName());
+            fw.write(""
+                    + "/*\n"
+                    + " * Gerado automaticamente em " + Util.hoje() + " por " + System.getProperty("user.name") + ".\n"
+                    + " */\n"
+                    + "package " + nomePacoteBase + ";\n"
+                    + "\n");
+
+            fw.write(""
+                    + "import "+nomeCompletoEntidade+" ;\n"
+                    + "import br.com.impactit.framework.ImpactitApi;\n"
+                    + "import javax.servlet.annotation.WebServlet;\n"
+                    + "\n"
+                    + "\n"
+                    + "@WebServlet(name = \""+nomeCompletoEntidade+"API\", urlPatterns = {\"/api/" + nomeEntidade.toLowerCase() + "/*\"})\n"
+                    + "public class " + nomeEntidade + "API extends ImpactitApi<" + nomeEntidade + "> {\n"
+                    + "\n"
+                    + "    @Override\n"
+                    + "    public Class<" + nomeEntidade + "> getClazz() {\n"
+                    + "        return " + nomeEntidade + ".class;\n"
+                    + "    }\n"
+                    + "\n"
+                    + "}"
+                    + "");
+
+            fw.close();
+        } catch (Exception ex) {
+            getLog().error(ex);
+        }
     }
 
 }
