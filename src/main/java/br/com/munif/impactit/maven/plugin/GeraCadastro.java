@@ -6,6 +6,8 @@ import java.io.FileWriter;
 import java.io.OutputStreamWriter;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
+import java.util.List;
+import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -265,6 +267,7 @@ public class GeraCadastro extends AbstractMojo {
     }
 
     private void geraViewEdita() {
+        List<Field> todosAtributosNaoEstaticos = Util.getTodosAtributosNaoEstaticos(classeEntidade);
         String primeiroAtributo = Util.primeiroAtributo(classeEntidade).getName();
         File f = new File(pasta.replaceAll("\\\\", "/").replaceAll("/java", "/webapp") + "/" + nomeEntidade.toLowerCase());
         f.mkdirs();
@@ -288,15 +291,58 @@ public class GeraCadastro extends AbstractMojo {
                     + "                    <p:row>\n"
                     + "                        <p:column colspan=\"6\">Editando " + nomeEntidade + "</p:column>      \n"
                     + "                    </p:row>\n"
-                    + "                </f:facet>\n"
-                    + "                <p:row>\n"
-                    + "                    <p:column><h:outputText value=\"" + Util.primeiraMaiuscula(primeiroAtributo) + ":*\"/></p:column>\n"
-                    + "                    <p:column colspan=\"5\">\n"
-                    + "                        <p:inputText id=\"" + primeiroAtributo + "\" size=\"50\"  value=\"#{" + Util.primeiraMinuscula(nomeEntidade) + "Controller.entidade." + primeiroAtributo + "}\" required=\"true\" requiredMessage=\"" + primeiroAtributo + " é obrigatório\"/>\n"
-                    + "                        <p:message for=\"" + primeiroAtributo + "\" showDetail=\"true\" />\n"
-                    + "                    </p:column>\n"
-                    + "                </p:row>\n"
-                    + "\n"
+                    + "                </f:facet>\n");
+            boolean primeiro = true;
+            for (Field atributo : todosAtributosNaoEstaticos) {
+                if ("id".equals(atributo.getName())) {
+                    continue;
+                }
+                if ("ti".equals(atributo.getName())) {
+                    continue;
+                }
+                if ("cd".equals(atributo.getName())) {
+                    continue;
+                }
+                if ("version".equals(atributo.getName())) {
+                    continue;
+                }
+
+                fw.write("                <p:row>\n");
+
+                fw.write("                    <p:column><h:outputText value=\"" + Util.primeiraMaiuscula(atributo.getName()) + ":" + (primeiro ? "*" : "") + "\"/></p:column>\n");
+
+                fw.write("                    <p:column colspan=\"5\">\n");
+
+                if (atributo.isAnnotationPresent(Lob.class)) {
+                    fw.write("                        <p:inputTextarea id=\"" + atributo.getName() + "\" rows=\"10\" cols=\"50\" autoResize=\"false\" value=\"#{" + Util.primeiraMinuscula(nomeEntidade) + "Controller.entidade." + atributo.getName() + "}\" required=\"true\" requiredMessage=\"" + Util.primeiraMaiuscula(atributo.getName()) + " é obrigatório\"/>\n");
+                } else if (atributo.isAnnotationPresent(Temporal.class)) {
+                    Temporal t = atributo.getAnnotation(Temporal.class);
+                    String mascara = "dd/MM/yyyy HH:mm:ss";
+                    if (t.value().equals(TemporalType.DATE)) {
+                        mascara = "dd/MM/yyyy";
+                    }
+                    if (t.value().equals(TemporalType.TIME)) {
+                        mascara = "HH:mm:ss";
+                    }
+
+                    fw.write("                        <p:calendar  id=\"" + atributo.getName() + "\" value=\"#{" + Util.primeiraMinuscula(nomeEntidade) + "Controller.entidade." + atributo.getName() + "}\" mask=\"true\" navigator=\"true\" pattern=\"" + mascara + "\" effect=\"slide\" locale=\"br\"  />\n");
+                } else {
+                    fw.write("                        <p:inputText id=\"" + atributo.getName() + "\" size=\"50\"  value=\"#{" + Util.primeiraMinuscula(nomeEntidade) + "Controller.entidade." + atributo.getName() + "}\" " + (primeiro ? "required=\"true\" requiredMessage=\"" + atributo.getName() + " é obrigatório\"" : "") + "/>\n");
+
+                }
+
+                fw.write("                        <p:message for=\"" + atributo.getName() + "\" showDetail=\"true\" />\n"
+                        + "                    </p:column>\n");
+
+                fw.write(""
+                        + "                </p:row>\n"
+                        + "\n");
+                if (primeiro) {
+                    primeiro = false;
+                }
+            }
+
+            fw.write(""
                     + "                <f:facet name=\"footer\">\n"
                     + "                    <p:row>\n"
                     + "                        <p:column colspan=\"6\" style=\"text-align: right\">\n"
@@ -467,12 +513,12 @@ public class GeraCadastro extends AbstractMojo {
                     + "\n");
 
             fw.write(""
-                    + "import "+nomeCompletoEntidade+" ;\n"
+                    + "import " + nomeCompletoEntidade + " ;\n"
                     + "import br.com.impactit.framework.ImpactitApi;\n"
                     + "import javax.servlet.annotation.WebServlet;\n"
                     + "\n"
                     + "\n"
-                    + "@WebServlet(name = \""+nomeCompletoEntidade+"API\", urlPatterns = {\"/api/" + nomeEntidade.toLowerCase() + "/*\"})\n"
+                    + "@WebServlet(name = \"" + nomeCompletoEntidade + "API\", urlPatterns = {\"/api/" + nomeEntidade.toLowerCase() + "/*\"})\n"
                     + "public class " + nomeEntidade + "API extends ImpactitApi<" + nomeEntidade + "> {\n"
                     + "\n"
                     + "    @Override\n"
