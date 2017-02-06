@@ -7,6 +7,7 @@ import java.io.OutputStreamWriter;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.util.List;
+import javax.persistence.Enumerated;
 import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 import javax.persistence.Temporal;
@@ -315,7 +316,19 @@ public class GeraCadastro extends AbstractMojo {
 
                 if (atributo.isAnnotationPresent(Lob.class)) {
                     fw.write("                        <p:inputTextarea id=\"" + atributo.getName() + "\" rows=\"10\" cols=\"50\" autoResize=\"false\" value=\"#{" + Util.primeiraMinuscula(nomeEntidade) + "Controller.entidade." + atributo.getName() + "}\" required=\"true\" requiredMessage=\"" + Util.primeiraMaiuscula(atributo.getName()) + " é obrigatório\"/>\n");
+                } else if (atributo.isAnnotationPresent(Enumerated.class)) {
+                    System.out.println("----->");
+                    Class<?> enumType = atributo.getType();
+                    System.out.println("----->"+enumType);
+                    Object[] possibleValues = enumType.getEnumConstants();
+                    fw.write("                    <p:selectOneMenu id=\"" + atributo.getName() + "\" value=\"#{" + Util.primeiraMinuscula(nomeEntidade) + "Controller.entidade." + atributo.getName() + "}\">\n");
+                    fw.write("                        <f:selectItem itemLabel=\"Selecione\" itemValue=\"\" />\n");
+                    for (Object opcao : possibleValues) {
+                        fw.write("                        <f:selectItem itemLabel=\""+opcao.toString()+"\" itemValue=\""+opcao.toString()+"\" />\n");
+                    }
+                    fw.write("                    </p:selectOneMenu>\n");
                 } else if (atributo.isAnnotationPresent(Temporal.class)) {
+
                     Temporal t = atributo.getAnnotation(Temporal.class);
                     String mascara = "dd/MM/yyyy HH:mm:ss";
                     if (t.value().equals(TemporalType.DATE)) {
@@ -326,6 +339,7 @@ public class GeraCadastro extends AbstractMojo {
                     }
 
                     fw.write("                        <p:calendar  id=\"" + atributo.getName() + "\" value=\"#{" + Util.primeiraMinuscula(nomeEntidade) + "Controller.entidade." + atributo.getName() + "}\" mask=\"true\" navigator=\"true\" pattern=\"" + mascara + "\" effect=\"slide\" locale=\"br\"  />\n");
+
                 } else {
                     fw.write("                        <p:inputText id=\"" + atributo.getName() + "\" size=\"50\"  value=\"#{" + Util.primeiraMinuscula(nomeEntidade) + "Controller.entidade." + atributo.getName() + "}\" " + (primeiro ? "required=\"true\" requiredMessage=\"" + atributo.getName() + " é obrigatório\"" : "") + "/>\n");
 
