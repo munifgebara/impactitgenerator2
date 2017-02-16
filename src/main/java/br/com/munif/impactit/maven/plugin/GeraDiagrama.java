@@ -45,7 +45,7 @@ public class GeraDiagrama extends AbstractMojo {
     private List<Class> entidades;
     private ClassLoader classLoader;
 
-    @Parameter(defaultValue = "${project.build.directory}", property = "pastaDestino", required = true)
+    @Parameter(defaultValue = "${project.basedir}", property = "pastaDestino", required = true)
     private File pastaDestino;
 
     @Override
