@@ -235,7 +235,7 @@ public class GeraDiagrama extends AbstractMojo {
         List<String> associacoes = new ArrayList<String>();
 
         if (!entidade.getSuperclass().equals(Object.class)) {
-            if (entidade.getSuperclass().getSimpleName().equals("EntidadePadrao")) {
+            if (entidade.getSuperclass().getSimpleName().equals("ImpactitEntity")) {
                 //COLOCAR apenas uma marca
             } else {
                 associacoes.add("edge [ arrowhead = \"empty\" headlabel = \"\" taillabel = \"\"] " + entidade.getSimpleName() + " -> " + entidade.getSuperclass().getSimpleName());

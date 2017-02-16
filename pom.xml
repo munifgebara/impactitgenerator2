@@ -42,6 +42,7 @@
             <version>1.0.0.Final</version>
             <type>jar</type>
         </dependency>
+
     </dependencies>
     
     <build>
